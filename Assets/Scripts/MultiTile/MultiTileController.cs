@@ -128,18 +128,39 @@ public class MultiTileController : MonoBehaviour
     public void Click_TakePicture()
     {
         Debug.Log("Click!");
-        //FlipperUtility.FullScreenFlips(webcam, screenTexture, widthSubdivisions, heightSubdivisions, flipMode, out pictureTexture, true);
-
-
+        
         string fileUID = "Mozaic" + DateTime.Now.Year + "." + DateTime.Now.Month + "." + DateTime.Now.Day + "_"
             + DateTime.Now.Hour + "." + DateTime.Now.Minute + "." + DateTime.Now.Second + "." + DateTime.Now.Millisecond;
         saving = true;
         
         //Assemble full tile:
-        var image = AssembleImage(mozaicMultiTile.tileTexture, widthSubdivisions, heightSubdivisions);
-
-        ScreenshotManager.SaveImage(image, fileUID, "png");
+        var mozaicTexture = AssembleImage(mozaicMultiTile.tileTexture, widthSubdivisions, heightSubdivisions);
+        
+        //ScreenshotManager.SaveImage(mozaicTexture, fileUID, "png");
+        StartCoroutine(SavePicture(mozaicTexture));
     }
+    public IEnumerator SavePicture(Texture2D mozaicTexture)
+    {
+        string fileUID = "Mozaic" + DateTime.Now.Year + "." + DateTime.Now.Month + "." + DateTime.Now.Day + "_"
+            + DateTime.Now.Hour + "." + DateTime.Now.Minute + "." + DateTime.Now.Second + "." + DateTime.Now.Millisecond;
+        saving = true;
+        
+        //Save Texture:
+        byte[] bytes = mozaicTexture.EncodeToPNG();
+        string fileExt = ".png";
+        string path = Application.persistentDataPath + "/" + fileUID + fileExt;
+        yield return ScreenshotManager.Instance.Save(bytes, fileUID, path, ScreenshotManager.ImageType.IMAGE);
+
+        Debug.Log("Picture Saved!  Now to add it to the gallery");
+        //yield return new WaitForSeconds(1f);
+        //Add to the Gallery:
+        //gallery.imageLoader.AddImageToFront(mozaicTexture, fileUID);
+        yield return gallery.imageLoader.AddImageToFront(path, fileUID);
+        
+        Debug.Log("Added it to the gallery");
+        ImageSaved(path);
+    }
+    
     void ImageSaved(string path)
     {
         Debug.Log("Image finished saving!  Saved to: " + path);

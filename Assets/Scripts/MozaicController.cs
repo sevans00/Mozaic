@@ -35,13 +35,27 @@ public class MozaicController : MonoBehaviour {
 	public void Take_Picture ()
 	{
 		Debug.Log("Click!");
-		//FlipperUtility.FullScreenFlips(webcam, screenTexture, widthSubdivisions, heightSubdivisions, flipMode, out pictureTexture, true);
-		string fileUID = "Mozaic"+DateTime.Now.Year+"."+DateTime.Now.Month+"."+DateTime.Now.Day+"_"
-			+DateTime.Now.Hour+"."+DateTime.Now.Minute+"."+DateTime.Now.Second+"."+DateTime.Now.Millisecond;
-		//TODO: Write to file:
-		saving = true;
-		ScreenshotManager.SaveImage(mozaic.screenTexture, fileUID, "png");
+        StartCoroutine(SavePicture());
 	}
+    public IEnumerator SavePicture()
+    {
+        string fileUID = "Mozaic" + DateTime.Now.Year + "." + DateTime.Now.Month + "." + DateTime.Now.Day + "_"
+            + DateTime.Now.Hour + "." + DateTime.Now.Minute + "." + DateTime.Now.Second + "." + DateTime.Now.Millisecond;
+        saving = true;
+
+        //Copy Texture:
+        Texture2D mozaicTexture = new Texture2D(mozaic.screenTexture.width, mozaic.screenTexture.height);
+        Graphics.CopyTexture(mozaic.screenTexture, mozaicTexture);
+        
+        //Save Texture:
+        byte[] bytes = mozaicTexture.EncodeToPNG();
+        string fileExt = ".png";
+        string path = Application.persistentDataPath + "/" + fileUID + fileExt;
+        yield return ScreenshotManager.Instance.Save(bytes, fileUID, path, ScreenshotManager.ImageType.IMAGE);
+        
+        //Add to the Gallery:
+        
+    }
 	void ImageSaved(string path)
 	{
 		//		console.text += "\n" + texture.name + " finished saving to " + path;

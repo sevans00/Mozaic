@@ -16,16 +16,16 @@ public class ImageLoader : MonoBehaviour
     [Tooltip("The panel where new images will be added as children")]
     private RectTransform content;
 
-    private List<Texture2D> textures;
+    private LinkedList<Texture2D> textures;
     private List<FileInfo> files;
     private List<FileInfo> loadedFiles;
     private const int BatchSize = 10;
     private int currentBatch = 0;
 
-    private void Start()
+    public void Initialize()
     {
         //Application.runInBackground = true;
-        textures = new List<Texture2D>();
+        textures = new LinkedList<Texture2D>();
 
         DirectoryInfo di = new DirectoryInfo(imagePath);
         var allFiles = di.GetFiles("*.png");
@@ -34,81 +34,44 @@ public class ImageLoader : MonoBehaviour
         StartCoroutine(LoadImagesBatch(currentBatch));
     }
 
-    public IEnumerator LoadImageIntoFront(string path)
+
+    public IEnumerator AddImageToFront(string path, string name)
     {
-        yield return LoadTextureAsync(path, AddLoadedTextureToFrontOfCollection);
-        CreateImage(textures.First());
+        Action<Texture2D> onTextureLoaded = (Texture2D texture) => { textures.AddFirst(texture); };
+
+        yield return LoadTextureAsync(path, onTextureLoaded);
+        var imageObject = CreateImage(textures.First(), name);
+        imageObject.transform.SetAsFirstSibling();
+    }
+    public void AddImageToFront(Texture2D texture, string name)
+    {
+        textures.AddFirst(texture);
+        var imageObject = CreateImage(textures.First(), name);
+        imageObject.transform.SetAsFirstSibling();
     }
 
     public IEnumerator LoadImagesBatch(int batch)
     {
-
         foreach (var file in files)
         {
             Debug.Log(file.FullName);
             yield return LoadTextureAsync(file.FullName, AddLoadedTextureToCollection);
-            CreateImage(textures.Last());
+            CreateImage(textures.Last(), file.Name);
         }
-    }
-    
-    public IEnumerator LoadImages()
-    {
-        textures = new List<Texture2D>();
-
-        DirectoryInfo di = new DirectoryInfo(imagePath);
-        var allFiles = di.GetFiles("*.png");
-        var files = allFiles.OrderByDescending(x => x.Name);
-
-        foreach (var file in files)
-        {
-            Debug.Log(file.FullName);
-            yield return LoadTextureAsync(file.FullName, AddLoadedTextureToCollection);
-        }
-
-        CreateImages();
-    }
-
-    public IEnumerator LoadImagesSequential()
-    {
-        textures = new List<Texture2D>();
-
-        DirectoryInfo di = new DirectoryInfo(imagePath);
-        var allFiles = di.GetFiles("*.png");
-        var files = allFiles.OrderByDescending(x => x.Name);
-
-        var startTime = DateTime.Now;
-        foreach (var file in files)
-        {
-            Debug.Log(file.FullName);
-            yield return LoadTextureAsync(file.FullName, AddLoadedTextureToCollection);
-            CreateImage(textures.Last());
-        }
-        var endTime = DateTime.Now;
-        Debug.Log("Load texture async time: "+(startTime - endTime));
     }
     
     private void AddLoadedTextureToCollection(Texture2D texture)
     {
-        textures.Add(texture);
+        textures.AddLast(texture);
     }
-
-    private void CreateImage(Texture2D texture)
+    private GameObject CreateImage(Texture2D texture, string name)
     {
-        GameObject imageObject = new GameObject("Image");
+        GameObject imageObject = new GameObject(name);
         imageObject.transform.SetParent(content);
         imageObject.AddComponent<Image>().sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero);
-        Debug.Log("Sprite: " + texture.width + ", " + texture.height);
-        //imageObject.GetComponent<Image>().minHeight = texture.height;
+        return imageObject;
     }
-
-    private void CreateImages()
-    {
-        foreach (var texture in textures)
-        {
-            CreateImage(texture);
-        }
-    }
-
+    
     public IEnumerator LoadTextureAsync(string originalFileName, Action<Texture2D> result)
     {
         string fileToLoad = GetCleanFileName(originalFileName);
@@ -136,4 +99,5 @@ public class ImageLoader : MonoBehaviour
 
         return fileToLoad;
     }
+
 }

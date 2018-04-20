@@ -8,16 +8,26 @@ public class Gallery : MonoBehaviour {
 
     public event Action OnGalleryClosed;
 
+    public ScrollRect scrollRect;
+    public GameObject contentPanel;
+    public ImageLoader imageLoader;
+
+    public void Start()
+    {
+        imageLoader.Initialize();
+    }
+
     public void OnBackButtonClick()
     {
         gameObject.SetActive(false);
-        OnGalleryClosed();
+        if ( OnGalleryClosed != null )
+            OnGalleryClosed();
     }
 
     public void OpenGallery()
     {
         gameObject.SetActive(true);
-        ScrollRect rect;
+        
         
         //Todo: load
     }

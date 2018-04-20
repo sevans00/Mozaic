@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 
 public class ScreenshotManager : MonoBehaviour {
 
-	enum ImageType { IMAGE, SCREENSHOT };
+	public enum ImageType { IMAGE, SCREENSHOT };
 	enum SaveStatus { NOTSAVED, SAVED, DENIED, TIMEOUT };
 
 	public static event Action<Texture2D> OnScreenshotTaken;
@@ -156,8 +156,7 @@ public class ScreenshotManager : MonoBehaviour {
 		Instance.StartCoroutine(Instance.Save(bytes, fileName, path, ImageType.IMAGE));
 	}
 	
-	
-	IEnumerator Save(byte[] bytes, string fileName, string path, ImageType imageType)
+	public IEnumerator Save(byte[] bytes, string fileName, string path, ImageType imageType)
 	{
 		int count = 0;
 		SaveStatus saved = SaveStatus.NOTSAVED;
