@@ -1,1 +1,3 @@
 # Mozaic
+
+Basic Flipping program
