@@ -41,11 +41,12 @@ public class MultiTileController : MonoBehaviour
             Debug.LogWarning("Webcam null or not playing");
             yield return new WaitForSeconds(1f);
         }
-        Initialize();
+        Debug.LogWarning("Initializing");
+        yield return Initialize();
     }
 
     // Use this for initialization
-    void Initialize()
+    public IEnumerator Initialize()
     {
         ScreenshotManager.OnImageSaved += ImageSaved;
 
@@ -70,6 +71,8 @@ public class MultiTileController : MonoBehaviour
         //TODO: Raw image?
         rawImage.texture = webcam;
         rawImage.canvasRenderer.SetAlpha(0.5f);
+        
+        yield return gallery.Initialize(Application.persistentDataPath + "/");
 
         gallery.OnGalleryClosed += OnGalleryClosed;
         initialized = true;

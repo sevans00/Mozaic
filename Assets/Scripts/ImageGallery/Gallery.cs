@@ -12,9 +12,9 @@ public class Gallery : MonoBehaviour {
     public GameObject contentPanel;
     public ImageLoader imageLoader;
 
-    public void Start()
+    public IEnumerator Initialize(string imagePath)
     {
-        imageLoader.Initialize();
+        yield return imageLoader.Initialize(imagePath);
     }
 
     public void OnBackButtonClick()

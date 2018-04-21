@@ -8,9 +8,7 @@ using UnityEngine.UI;
 
 public class ImageLoader : MonoBehaviour
 {
-    [SerializeField]
-    [Tooltip("The folder where images will be loaded from")]
-    private string imagePath;
+    private string imageStoragePath;
 
     [SerializeField]
     [Tooltip("The panel where new images will be added as children")]
@@ -22,16 +20,18 @@ public class ImageLoader : MonoBehaviour
     private const int BatchSize = 10;
     private int currentBatch = 0;
 
-    public void Initialize()
+    public IEnumerator Initialize(string imagePath)
     {
-        //Application.runInBackground = true;
+        imageStoragePath = imagePath;
+        
+        Application.runInBackground = true;
         textures = new LinkedList<Texture2D>();
 
-        DirectoryInfo di = new DirectoryInfo(imagePath);
+        DirectoryInfo di = new DirectoryInfo(imageStoragePath);
         var allFiles = di.GetFiles("*.png");
         files = allFiles.OrderByDescending(x => x.Name).ToList();
 
-        StartCoroutine(LoadImagesBatch(currentBatch));
+        yield return LoadImagesBatch(currentBatch);
     }
 
 
@@ -40,12 +40,6 @@ public class ImageLoader : MonoBehaviour
         Action<Texture2D> onTextureLoaded = (Texture2D texture) => { textures.AddFirst(texture); };
 
         yield return LoadTextureAsync(path, onTextureLoaded);
-        var imageObject = CreateImage(textures.First(), name);
-        imageObject.transform.SetAsFirstSibling();
-    }
-    public void AddImageToFront(Texture2D texture, string name)
-    {
-        textures.AddFirst(texture);
         var imageObject = CreateImage(textures.First(), name);
         imageObject.transform.SetAsFirstSibling();
     }
