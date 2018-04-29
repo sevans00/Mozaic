@@ -8,15 +8,17 @@ using UnityEngine.UI;
 
 public class ImageLoader : MonoBehaviour
 {
+    [SerializeField]
     private string imageStoragePath;
 
     [SerializeField]
     [Tooltip("The panel where new images will be added as children")]
     private RectTransform content;
+    public Image frameImage;
 
-    private LinkedList<Texture2D> textures;
-    private List<FileInfo> files;
-    private List<FileInfo> loadedFiles;
+    public LinkedList<Texture2D> textures;
+    public List<FileInfo> files;
+    public List<FileInfo> loadedFiles;
     private const int BatchSize = 10;
     private int currentBatch = 0;
 
@@ -37,9 +39,11 @@ public class ImageLoader : MonoBehaviour
 
     public IEnumerator AddImageToFront(string path, string name)
     {
-        Action<Texture2D> onTextureLoaded = (Texture2D texture) => { textures.AddFirst(texture); };
+        //When loaded, add it to the front:
+        yield return LoadTextureAsync(path, (Texture2D texture) => { textures.AddFirst(texture); });
 
-        yield return LoadTextureAsync(path, onTextureLoaded);
+        //TODO: Record filename to tell that we have created the images already
+
         var imageObject = CreateImage(textures.First(), name);
         imageObject.transform.SetAsFirstSibling();
     }
@@ -48,16 +52,17 @@ public class ImageLoader : MonoBehaviour
     {
         foreach (var file in files)
         {
-            Debug.Log(file.FullName);
-            yield return LoadTextureAsync(file.FullName, AddLoadedTextureToCollection);
+            Debug.Log("LoadImage: "+file.FullName);
+            yield return LoadTextureAsync(file.FullName, (Texture2D texture) => { textures.AddLast(texture); });
             CreateImage(textures.Last(), file.Name);
         }
     }
-    
-    private void AddLoadedTextureToCollection(Texture2D texture)
+
+    public void ShowImages()
     {
-        textures.AddLast(texture);
+
     }
+    
     private GameObject CreateImage(Texture2D texture, string name)
     {
         GameObject imageObject = new GameObject(name);
@@ -79,7 +84,10 @@ public class ImageLoader : MonoBehaviour
 
         www.LoadImageIntoTexture(loadedTexture);
 
-        result(loadedTexture);
+        if (result != null)
+        {
+            result(loadedTexture);
+        }
     }
 
     private static string GetCleanFileName(string originalFileName)

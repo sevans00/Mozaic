@@ -11,10 +11,12 @@ public class Gallery : MonoBehaviour {
     public ScrollRect scrollRect;
     public GameObject contentPanel;
     public ImageLoader imageLoader;
+    public ScrollPanelSnap scrollPanelSnap;
 
     public IEnumerator Initialize(string imagePath)
     {
         yield return imageLoader.Initialize(imagePath);
+        scrollPanelSnap.Initialize();
     }
 
     public void OnBackButtonClick()
@@ -27,7 +29,7 @@ public class Gallery : MonoBehaviour {
     public void OpenGallery()
     {
         gameObject.SetActive(true);
-        
+        imageLoader.ShowImages();
         
         //Todo: load
     }
