@@ -28,6 +28,13 @@ public class ScrollSnapRect : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
     [Tooltip("Container with page images (optional)")]
     public Transform pageSelectionIcons;
 
+    public float velocityCutoff = 100f;
+    public float lowerVelocityCutoff = 80f;
+    public float upperVelocityCutoff = 100f;
+
+    public float scrollRectVelocity = 1f;
+
+
     // fast swipes should be fast and short. If too long, then it is not fast swipe
     private int _fastSwipeThresholdMaxLimit;
 
@@ -60,7 +67,7 @@ public class ScrollSnapRect : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
     private List<Image> _pageSelectionImages;
 
     //------------------------------------------------------------------------
-    void Start() {
+    public void Initialize() {
         _scrollRectComponent = GetComponent<ScrollRect>();
         _scrollRectRect = GetComponent<RectTransform>();
         _container = _scrollRectComponent.content;
@@ -93,7 +100,18 @@ public class ScrollSnapRect : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
 	}
 
     //------------------------------------------------------------------------
-    void Update() {
+    void Update()
+    {
+        
+        if (!_lerp && 
+            !_dragging && 
+            _scrollRectComponent != null && 
+            _scrollRectComponent.velocity.magnitude < upperVelocityCutoff && 
+            _scrollRectComponent.velocity.magnitude > lowerVelocityCutoff)
+        {
+            LerpToPage(GetNearestPage());
+        }
+
         // if moving to target position
         if (_lerp) {
             // prevent overshooting with values greater than 1
@@ -113,6 +131,7 @@ public class ScrollSnapRect : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
                 SetPageSelection(GetNearestPage());
             }
         }
+
     }
 
     //------------------------------------------------------------------------
@@ -270,6 +289,14 @@ public class ScrollSnapRect : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
             difference = - (_startPosition.y - _container.anchoredPosition.y);
         }
 
+        //I don't like this fast swipe thing:
+        scrollRectVelocity = _scrollRectComponent.velocity.magnitude;
+        Debug.Log("Velocity: " + _scrollRectComponent.velocity.magnitude);
+
+        if ( _scrollRectComponent.velocity.magnitude > velocityCutoff)
+        {
+        
+        /*
         // test for fast swipe - swipe that moves only +/-1 item
         if (Time.unscaledTime - _timeStamp < fastSwipeThresholdTime &&
             Mathf.Abs(difference) > fastSwipeThresholdDistance &&
@@ -279,6 +306,7 @@ public class ScrollSnapRect : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
             } else {
                 PreviousScreen();
             }
+        */
         } else {
             // if not fast time, look to which page we got to
             LerpToPage(GetNearestPage());

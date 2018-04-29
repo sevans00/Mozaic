@@ -4,19 +4,17 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class Gallery : MonoBehaviour {
-
+public class Gallery : MonoBehaviour
+{
     public event Action OnGalleryClosed;
-
-    public ScrollRect scrollRect;
-    public GameObject contentPanel;
+    
     public ImageLoader imageLoader;
-    public ScrollPanelSnap scrollPanelSnap;
+    public ScrollSnapRect scrollSnapRect;
 
     public IEnumerator Initialize(string imagePath)
     {
         yield return imageLoader.Initialize(imagePath);
-        scrollPanelSnap.Initialize();
+        scrollSnapRect.Initialize();
     }
 
     public void OnBackButtonClick()

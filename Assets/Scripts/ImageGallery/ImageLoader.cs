@@ -14,11 +14,11 @@ public class ImageLoader : MonoBehaviour
     [SerializeField]
     [Tooltip("The panel where new images will be added as children")]
     private RectTransform content;
-    public Image frameImage;
 
     public LinkedList<Texture2D> textures;
     public List<FileInfo> files;
     public List<FileInfo> loadedFiles;
+    
     private const int BatchSize = 10;
     private int currentBatch = 0;
 
@@ -67,7 +67,25 @@ public class ImageLoader : MonoBehaviour
     {
         GameObject imageObject = new GameObject(name);
         imageObject.transform.SetParent(content);
-        imageObject.AddComponent<Image>().sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero);
+        
+        var image = imageObject.AddComponent<Image>();
+        image.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero);
+
+        var rectTransform = image.rectTransform;
+        
+        if ( texture.width > texture.height )
+        {
+            var desiredWidth = Screen.width * 0.9f;
+            float aspectRatio = (float)texture.height / (float)texture.width;
+            image.rectTransform.sizeDelta = new Vector2(desiredWidth, desiredWidth * aspectRatio);
+        }
+        if ( texture.height >= texture.width )
+        {
+            var desiredHeight = Screen.height * 0.9f;
+            float aspectRatio = (float)texture.width / (float)texture.height;
+            image.rectTransform.sizeDelta = new Vector2(desiredHeight * aspectRatio, desiredHeight);
+        }
+        
         return imageObject;
     }
     
