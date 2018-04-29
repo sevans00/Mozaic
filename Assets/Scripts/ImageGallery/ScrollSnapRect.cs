@@ -291,8 +291,7 @@ public class ScrollSnapRect : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
 
         //I don't like this fast swipe thing:
         scrollRectVelocity = _scrollRectComponent.velocity.magnitude;
-        Debug.Log("Velocity: " + _scrollRectComponent.velocity.magnitude);
-
+        
         if ( _scrollRectComponent.velocity.magnitude > velocityCutoff)
         {
         
