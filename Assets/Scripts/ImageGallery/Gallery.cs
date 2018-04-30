@@ -17,6 +17,14 @@ public class Gallery : MonoBehaviour
         scrollSnapRect.Initialize();
     }
 
+    public void OpenGallery()
+    {
+        gameObject.SetActive(true);
+        imageLoader.ShowImages();
+
+        //Todo: load new images
+    }
+
     public void OnBackButtonClick()
     {
         gameObject.SetActive(false);
@@ -24,12 +32,27 @@ public class Gallery : MonoBehaviour
             OnGalleryClosed();
     }
 
-    public void OpenGallery()
+
+    public void OnShareButtonClick()
     {
-        gameObject.SetActive(true);
-        imageLoader.ShowImages();
-        
-        //Todo: load
+        Debug.Log("Share!");
+        var page = scrollSnapRect.GetNearestPage();
+        Debug.Log("Page:"+page);
     }
 
+    public void OnEditButtonClick()
+    {
+        Debug.Log("Edit!");
+    }
+
+    public void OnDeleteButtonClick()
+    {
+        Debug.Log("Delete!");
+    }
+
+
+    public void OnOptionsButtonClick()
+    {
+        Debug.Log("Options!");
+    }
 }

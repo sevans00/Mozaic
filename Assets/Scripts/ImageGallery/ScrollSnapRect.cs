@@ -253,7 +253,7 @@ public class ScrollSnapRect : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
     }
 
     //------------------------------------------------------------------------
-    private int GetNearestPage() {
+    public int GetNearestPage() {
         // based on distance from current position, find nearest page
         Vector2 currentPosition = _container.anchoredPosition;
 

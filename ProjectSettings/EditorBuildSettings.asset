@@ -5,7 +5,7 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/CameraScene_tiledTexture_expanded.unity
     guid: d839c860a492af949bb96bc14ab17120
   - enabled: 0
@@ -14,3 +14,6 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/CameraScene.unity
     guid: 3ce2e89dde6449544a02cc593e3d8c54
+  - enabled: 1
+    path: Assets/CameraScene_tiledTexture_gallery.unity
+    guid: 727ec31d25e70d94f85f6c8842de29ac
