@@ -7,7 +7,8 @@ using UnityEngine.UI;
 public class Gallery : MonoBehaviour
 {
     public event Action OnGalleryClosed;
-    
+
+    public Canvas parentCanvas;
     public ImageLoader imageLoader;
     public ScrollSnapRect scrollSnapRect;
 
@@ -20,14 +21,17 @@ public class Gallery : MonoBehaviour
     public void OpenGallery()
     {
         gameObject.SetActive(true);
-        imageLoader.ShowImages();
-
+        //parentCanvas.sortingOrder = 1;
+        scrollSnapRect.SetPagePositions();
+        if ( imageLoader.files.Count > 0 )
+            scrollSnapRect.SetPage(0);
         //Todo: load new images
     }
 
     public void OnBackButtonClick()
     {
         gameObject.SetActive(false);
+        //parentCanvas.sortingOrder = -1;
         if ( OnGalleryClosed != null )
             OnGalleryClosed();
     }

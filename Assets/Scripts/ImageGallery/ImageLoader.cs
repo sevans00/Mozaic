@@ -57,11 +57,6 @@ public class ImageLoader : MonoBehaviour
             CreateImage(textures.Last(), file.Name);
         }
     }
-
-    public void ShowImages()
-    {
-
-    }
     
     private GameObject CreateImage(Texture2D texture, string name)
     {

@@ -134,8 +134,7 @@ public class ScrollSnapRect : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
 
     }
 
-    //------------------------------------------------------------------------
-    private void SetPagePositions() {
+    public void SetPagePositions() {
         int width = 0;
         int height = 0;
         int offsetX = 0;
@@ -183,7 +182,7 @@ public class ScrollSnapRect : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
     }
 
     //------------------------------------------------------------------------
-    private void SetPage(int aPageIndex) {
+    public void SetPage(int aPageIndex) {
         aPageIndex = Mathf.Clamp(aPageIndex, 0, _pageCount - 1);
         _container.anchoredPosition = _pagePositions[aPageIndex];
         _currentPage = aPageIndex;

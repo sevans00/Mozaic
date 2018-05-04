@@ -35,7 +35,7 @@ public class MultiTileController : MonoBehaviour
     IEnumerator WaitTillReady()
     {
         Debug.LogWarning("Waiting...");
-        yield return new WaitForSeconds(1f);
+        //yield return new WaitForSeconds(1f);
         while (WebCamTexture.devices.Length == 0)
         {
             Debug.LogWarning("Webcam null or not playing");
@@ -91,9 +91,9 @@ public class MultiTileController : MonoBehaviour
 
     public void OnGalleryButtonClick()
     {
-        gallery.OpenGallery();
         //Pause camera:
         webcam.Pause();
+        gallery.OpenGallery();
     }
     public void OnGalleryClosed()
     {
@@ -159,7 +159,8 @@ public class MultiTileController : MonoBehaviour
         //Add to the Gallery:
         //gallery.imageLoader.AddImageToFront(mozaicTexture, fileUID);
         yield return gallery.imageLoader.AddImageToFront(path, fileUID);
-        
+        gallery.scrollSnapRect.SetPagePositions();
+
         Debug.Log("Added it to the gallery");
         ImageSaved(path);
     }
