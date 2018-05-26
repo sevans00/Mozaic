@@ -15,7 +15,7 @@ public class ImageLoader : MonoBehaviour
     [Tooltip("The panel where new images will be added as children")]
     private RectTransform content;
 
-    public LinkedList<Texture2D> textures;
+    public List<Texture2D> textures;
     public List<FileInfo> files;
     public List<FileInfo> loadedFiles;
     
@@ -27,7 +27,8 @@ public class ImageLoader : MonoBehaviour
         imageStoragePath = imagePath;
         
         Application.runInBackground = true;
-        textures = new LinkedList<Texture2D>();
+        textures = new List<Texture2D>();
+        
 
         DirectoryInfo di = new DirectoryInfo(imageStoragePath);
         var allFiles = di.GetFiles("*.png");
@@ -36,24 +37,37 @@ public class ImageLoader : MonoBehaviour
         yield return LoadImagesBatch(currentBatch);
     }
 
+    public void AddImageTo(int position, FileInfo info, Texture2D texture)
+    {
+
+        //yield return LoadTextureAsync(info.FullName, (Texture2D texture) => { textures.AddFirst(texture); });
+
+        files.Insert(position, info);
+        textures.Insert(position, texture);
+        var imageObject = CreateImage(texture, info.Name);
+        imageObject.transform.SetSiblingIndex(position);
+
+
+    }
 
     public IEnumerator AddImageToFront(string path, string name)
     {
         //When loaded, add it to the front:
-        yield return LoadTextureAsync(path, (Texture2D texture) => { textures.AddFirst(texture); });
+        yield return LoadTextureAsync(path, (Texture2D texture) => { textures.Insert(0, texture); });
 
         //TODO: Record filename to tell that we have created the images already
 
         var imageObject = CreateImage(textures.First(), name);
         imageObject.transform.SetAsFirstSibling();
     }
-
+    
     public IEnumerator LoadImagesBatch(int batch)
     {
-        foreach (var file in files)
+        for (var ii = 0; ii < files.Count; ii++)
         {
+            var file = files[ii];
             Debug.Log("LoadImage: "+file.FullName);
-            yield return LoadTextureAsync(file.FullName, (Texture2D texture) => { textures.AddLast(texture); });
+            yield return LoadTextureAsync(file.FullName, (Texture2D texture) => { textures.Insert(ii, texture); });
             CreateImage(textures.Last(), file.Name);
         }
     }
@@ -84,6 +98,30 @@ public class ImageLoader : MonoBehaviour
         return imageObject;
     }
     
+    public FileInfo DeleteImage(int pageIndex)
+    {
+        var file = files[pageIndex];
+        var imageGO = content.transform.GetChild(pageIndex);
+
+        DestroyImmediate(imageGO.gameObject);
+
+        files.Remove(file);
+        //file.Delete(); //Wait until we don't undo
+        return file;
+    }
+
+    public Texture2D DeleteTexture(int pageIndex)
+    {
+        var texture = textures[pageIndex];
+        textures.Remove(texture);
+        return texture;
+    }
+
+    public GameObject GetImage(int pageIndex)
+    {
+        return content.transform.GetChild(pageIndex).gameObject;
+    }
+
     public IEnumerator LoadTextureAsync(string originalFileName, Action<Texture2D> result)
     {
         string fileToLoad = GetCleanFileName(originalFileName);

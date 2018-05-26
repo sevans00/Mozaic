@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System.Collections;
 using System.Collections.Generic;
+using System;
 
 [RequireComponent(typeof(Image))]
 [RequireComponent(typeof(Mask))]
@@ -40,6 +41,7 @@ public class ScrollSnapRect : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
 
     private ScrollRect _scrollRectComponent;
     private RectTransform _scrollRectRect;
+
     private RectTransform _container;
 
     private bool _horizontal;
@@ -132,6 +134,113 @@ public class ScrollSnapRect : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
             }
         }
 
+    }
+
+
+    private Coroutine _backfillAndLerpCoroutine = null;
+    public void BackfillLerp(int pageIndex)
+    {
+        if ( _backfillAndLerpCoroutine != null )
+        {
+            StopCoroutine(_backfillAndLerpCoroutine);
+            _backfillAndLerpCoroutine = null;
+            Initialize();
+            SetPagePositions();
+            SetPage(pageIndex);
+        }
+        if ( _pageCount == 1 )
+        {
+            Initialize();
+            SetPagePositions();
+            return;
+        }
+        if ( pageIndex >= _pageCount - 1 )
+        {
+            Initialize();
+            SetPagePositions();
+            SetPage(pageIndex - 1);
+            return;//TODO: need to lerp the whole panel over so we're set up properly
+        }
+        //Start new lerp:
+        _backfillAndLerpCoroutine = StartCoroutine(LerpToFillRemovedImage(pageIndex));
+    }
+    public IEnumerator LerpToFillRemovedImage(int pageIndex)
+    {
+        if ( pageIndex >= _pageCount - 1 )
+        {
+            //Lerp whole container, 'cause our end of child is gone
+            yield return DoContainerTweenTo(pageIndex - 1);
+        }
+        else
+        {
+            yield return DoBackfillTween(pageIndex);
+        }
+        Initialize();
+        SetPagePositions();
+        SetPage(pageIndex);
+        _backfillAndLerpCoroutine = null;
+    }
+    private IEnumerator DoBackfillTween(int pageIndex)
+    {
+        // screen width in pixels of scrollrect window
+        var width = (int)_scrollRectRect.rect.width;
+        // center position of all pages
+        var offsetX = width / 2;
+        // total width
+        var containerWidth = width * _pageCount;
+
+        var desiredPosition = new Vector2(pageIndex * width - containerWidth / 2 + offsetX, 0f);
+
+        while (true)
+        {
+            yield return new WaitForEndOfFrame();
+            // prevent overshooting with values greater than 1
+            float decelerate = Mathf.Min(decelerationRate * Time.deltaTime, 1f);
+            for (var ii = pageIndex; ii < _pageCount - 1; ii++)
+            {
+                var desiredChildPosition = new Vector2(ii * width - containerWidth / 2 + offsetX, 0f);
+
+                RectTransform child = _container.GetChild(ii).GetComponent<RectTransform>();
+                child.anchoredPosition = Vector2.Lerp(child.anchoredPosition, desiredChildPosition, decelerate);
+            }
+
+            var referenceChild = _container.GetChild(pageIndex).GetComponent<RectTransform>();
+            // time to stop lerping?
+            if (Vector2.SqrMagnitude(referenceChild.anchoredPosition - desiredPosition) < 0.25f)
+            {
+                break;
+            }
+        }
+    }
+    private IEnumerator DoContainerTweenTo(int pageIndex)
+    {
+        var tweenTarget = _pagePositions[pageIndex];
+        while (true)
+        {
+            yield return new WaitForEndOfFrame();
+
+            // prevent overshooting with values greater than 1
+            float decelerate = Mathf.Min(decelerationRate * Time.deltaTime, 1f);
+            _container.anchoredPosition = Vector2.Lerp(_container.anchoredPosition, tweenTarget, decelerate);
+            // time to stop lerping?
+            if (Vector2.SqrMagnitude(_container.anchoredPosition - tweenTarget) < 0.25f)
+            {
+                // snap to target and stop lerping
+                _container.anchoredPosition = tweenTarget;
+                _lerp = false;
+                // clear also any scrollrect move that may interfere with our lerping
+                _scrollRectComponent.velocity = Vector2.zero;
+                break;
+            }
+        }
+    }
+
+    public void SetPagePositionsAndLerp(int pageIndex)
+    {
+        Initialize();
+        SetPagePositions();
+        SetPage(pageIndex);
+        
     }
 
     public void SetPagePositions() {

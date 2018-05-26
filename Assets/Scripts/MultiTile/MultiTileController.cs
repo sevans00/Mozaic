@@ -29,6 +29,7 @@ public class MultiTileController : MonoBehaviour
 
     void Start()
     {
+        Screen.fullScreen = false;
         StartCoroutine(WaitTillReady());
     }
     
