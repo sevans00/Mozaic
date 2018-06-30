@@ -23,9 +23,18 @@ public class MultiTileController : MonoBehaviour
     public RawImage rawImage;
 
     //Options menu:
-    public GameObject optionsMenu;
+    public OptionsMenu optionsMenu;
+    //Overlay
+    public GameObject cameraOverlay;
+    public Slider slider;
     //Gallery:
     public Gallery gallery;
+
+    public class PlayerPrefsKeys
+    {
+        public static string OVERLAY_SLIDER = "OVERLAY_SLIDER";
+        public static string START_CAMERA_INDEX = "START_CAMERA_INDEX";
+    }
 
     void Start()
     {
@@ -51,6 +60,8 @@ public class MultiTileController : MonoBehaviour
     {
         ScreenshotManager.OnImageSaved += ImageSaved;
 
+        InitializeSettings();
+
         //Webcam:
         var devices = WebCamTexture.devices;
         foreach (var device in devices)
@@ -66,7 +77,8 @@ public class MultiTileController : MonoBehaviour
         webcam = new WebCamTexture(devices[webcamIndex].name);
 #endif
         webcam.Play();
-        
+        Debug.LogWarning("Webcam rotation: "+webcam.videoRotationAngle);
+        //webcam.videoRotationAngle = 0f;
         mozaicMultiTile.Initialize(webcam, widthSubdivisions, heightSubdivisions);
 
         //TODO: Raw image?
@@ -77,6 +89,13 @@ public class MultiTileController : MonoBehaviour
 
         gallery.OnGalleryClosed += OnGalleryClosed;
         initialized = true;
+    }
+
+    private void InitializeSettings()
+    {
+        webcamIndex = PlayerPrefs.GetInt(PlayerPrefsKeys.START_CAMERA_INDEX, 0);
+        slider.value = PlayerPrefs.GetFloat(PlayerPrefsKeys.OVERLAY_SLIDER, 0);
+        cameraOverlay.GetComponent<RawImage>().CrossFadeAlpha(PlayerPrefs.GetFloat(PlayerPrefsKeys.OVERLAY_SLIDER, 0), 0, true);
     }
 
     public void Update()
@@ -118,9 +137,10 @@ public class MultiTileController : MonoBehaviour
         {
             webcamIndex = 0;
         }
+        PlayerPrefs.SetInt(PlayerPrefsKeys.START_CAMERA_INDEX, webcamIndex);
         webcam = new WebCamTexture(devices[webcamIndex].name);
         webcam.Play();
-
+        
         mozaicMultiTile.Initialize(webcam, widthSubdivisions, heightSubdivisions);
 
         rawImage.texture = webcam;
@@ -148,7 +168,10 @@ public class MultiTileController : MonoBehaviour
         string fileUID = "Mozaic" + DateTime.Now.Year + "." + DateTime.Now.Month + "." + DateTime.Now.Day + "_"
             + DateTime.Now.Hour + "." + DateTime.Now.Minute + "." + DateTime.Now.Second + "." + DateTime.Now.Millisecond;
         saving = true;
-        
+
+        var startSaveTime = Time.time;
+        var saveDelay = 1.5f;
+
         //Save Texture:
         byte[] bytes = mozaicTexture.EncodeToPNG();
         string fileExt = ".png";
@@ -161,6 +184,13 @@ public class MultiTileController : MonoBehaviour
         //gallery.imageLoader.AddImageToFront(mozaicTexture, fileUID);
         yield return gallery.imageLoader.AddImageToFront(path, fileUID);
         gallery.scrollSnapRect.SetPagePositions();
+
+        /*
+        while (Time.time - startSaveTime < saveDelay)
+        {
+            yield return new WaitForEndOfFrame();
+        }
+        */
 
         Debug.Log("Added it to the gallery");
         ImageSaved(path);
@@ -189,9 +219,43 @@ public class MultiTileController : MonoBehaviour
 
     public void Click_Options()
     {
-        Click_NextCamera();
+        //Click_NextCamera();
+        Debug.LogWarning("Options click");
+        optionsMenu.Open();
 
         //optionsMenu.SetActive(!optionsMenu.activeSelf);
+
+    }
+
+    public void Click_EnableOverlay()
+    {
+        cameraOverlay.SetActive(cameraOverlay.activeSelf);
+    }
+
+    public void OnOverlaySliderChanged()
+    {
+        Debug.LogWarning("Slider Changed");
+
+        var value = slider.value;
+
+        PlayerPrefs.SetFloat(PlayerPrefsKeys.OVERLAY_SLIDER, value);
+        cameraOverlay.GetComponent<RawImage>().CrossFadeAlpha(value, 0, true);
+    }
+    
+    public void Click_SwitchResolution()
+    {
+        throw new NotImplementedException();
+    }
+
+    public void Click_Exit()
+    {
+        gallery.DeleteMarkedFile();
+        Application.Quit();
+    }
+
+    public void OnApplicationQuit()
+    {
+        gallery.DeleteMarkedFile();
     }
 
 

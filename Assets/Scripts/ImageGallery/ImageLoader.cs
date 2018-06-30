@@ -103,7 +103,7 @@ public class ImageLoader : MonoBehaviour
         var file = files[pageIndex];
         var imageGO = content.transform.GetChild(pageIndex);
 
-        DestroyImmediate(imageGO.gameObject);
+        Destroy(imageGO.gameObject);
 
         files.Remove(file);
         //file.Delete(); //Wait until we don't undo

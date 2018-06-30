@@ -35,6 +35,7 @@ public class ScrollSnapRect : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
 
     public float scrollRectVelocity = 1f;
 
+    public int pageCount { get { return _pageCount; } }
 
     // fast swipes should be fast and short. If too long, then it is not fast swipe
     private int _fastSwipeThresholdMaxLimit;
@@ -298,7 +299,7 @@ public class ScrollSnapRect : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
     }
 
     //------------------------------------------------------------------------
-    private void LerpToPage(int aPageIndex) {
+    public void LerpToPage(int aPageIndex) {
         aPageIndex = Mathf.Clamp(aPageIndex, 0, _pageCount - 1);
         _lerpTo = _pagePositions[aPageIndex];
         _lerp = true;
@@ -376,7 +377,7 @@ public class ScrollSnapRect : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
             }
         }
 
-        return nearestPage;
+        return Mathf.Clamp(nearestPage, 0, _pagePositions.Count);
     }
 
     //------------------------------------------------------------------------
