@@ -1,15 +1,12 @@
-﻿using UnityEngine.UI;
-using UnityEngine;
-using System.Collections;
-using System.IO;
-using System;
-using System.Collections.Generic;
+﻿using UnityEngine;
+using UnityEngine.UI;
 
 public class UIMultiTile : MonoBehaviour
 {
     //Textures:
     public WebCamTexture webcam;
     public Texture2D tileTexture;
+    public Sprite sprite;
     //Tile Material:
     public Material screenMaterial;
 
@@ -26,18 +23,14 @@ public class UIMultiTile : MonoBehaviour
     Color[] tile;
     int forwardX = 0;
     int backwardX = 0;
-    //TileTexture:
-    Color[] tiledColors;
-
+    
     public GameObject singleTilePrefab;
 
+    public GridLayoutGroup gridLayoutGroup;
+    public CanvasScaler canvasScaler;
+
     public bool initialized = false;
-
-
-    // Use this for initialization
-    //	void Start () {
-    //		Initialize(6,6);
-    //	}
+    
     public void ClearMultiTile()
     {
         this.webcam = null;
@@ -56,51 +49,52 @@ public class UIMultiTile : MonoBehaviour
         //Update:
         widthSubdivisions = newWidthSubdivisions;
         heightSubdivisions = newHeightSubdivisions;
+
         //*
-        quarterWidth = Screen.width / (2 * widthSubdivisions);
-        quarterHeight = Screen.height / (2 * heightSubdivisions);
+        var referenceResolution = canvasScaler.referenceResolution;
+        var referenceWidth = referenceResolution.x / widthSubdivisions;
+        var referenceHeight = referenceResolution.y / heightSubdivisions;
         /*/
-        quarterWidth = webcam.width / (2 * widthSubdivisions);
-        quarterHeight = webcam.height / (2 * heightSubdivisions);
+        var referenceResolution = Screen.currentResolution;
+        var referenceWidth = referenceResolution.width / widthSubdivisions;
+        var referenceHeight = referenceResolution.height / heightSubdivisions;
         //*/
-        tileWidth = quarterWidth * 2;
-        tileHeight = quarterHeight * 2;
+        gridLayoutGroup.cellSize = new Vector2(referenceWidth, referenceHeight);
+        
+        //Now, figure out where the center bottom left quarter of the camera is
+        //plus the proportional size of the camera relative to the canvas
+        //Assume that the camera and canvas size match, so we don't need to worry about canvas ratios
+        var widthRatio = webcam.width / referenceWidth;
+        var heightRatio = webcam.height / referenceHeight;
+
+        Debug.Log("Ratios: "+widthRatio+" "+heightRatio);
+
+        var camTileWidth = Mathf.FloorToInt(webcam.width / widthSubdivisions);
+        var camTileHeight = Mathf.FloorToInt(webcam.height / heightSubdivisions);
+        quarterWidth = camTileWidth / 2;
+        quarterHeight = camTileHeight / 2;
+
+        tileWidth = camTileWidth;
+        tileHeight = camTileHeight;
+
         //AssembleTile:
         tile = new Color[tileWidth * tileHeight];
-        tiledColors = new Color[widthSubdivisions * tileWidth * heightSubdivisions * tileHeight];
-
-        //Texture itself:
         tileTexture = new Texture2D(tileWidth, tileHeight);
+        sprite = Sprite.Create(tileTexture, new Rect(Vector2.zero, new Vector2(tileWidth, tileHeight)), new Vector2(0.5f, 0.5f));
 
-
-        //Scale everything:
-        var camera = Camera.main;
-        var camHeight = camera.orthographicSize * 2f;
-        var camWidth = camHeight * Screen.width / Screen.height;
-        var childScale = new Vector3(camWidth / widthSubdivisions, camHeight / heightSubdivisions);
-        //Sub-tiles:
-        bool evenWidth = (widthSubdivisions % 2 == 0);
-        bool evenHeight = (heightSubdivisions % 2 == 0);
         GameObject singleTile;
-        float offsetX;
-        float offsetY;
         for (int ii = 0; ii < widthSubdivisions; ii++)
         {
             for (int jj = 0; jj < heightSubdivisions; jj++)
             {
                 singleTile = Instantiate(singleTilePrefab);
-                singleTile.transform.parent = gameObject.transform;
-                offsetX = 0 - Mathf.Floor(widthSubdivisions / 2) + ii + (evenWidth ? 0.5f : 0);
-                offsetY = 0 - Mathf.Floor(heightSubdivisions / 2) + jj + (evenHeight ? 0.5f : 0);
-                //singleTile.transform.localPosition = new Vector3(offsetX, offsetY, 0);
-                singleTile.transform.localPosition = new Vector3(offsetX * childScale.x, offsetY * childScale.y, 0);
-                singleTile.GetComponent<MeshRenderer>().material.mainTexture = tileTexture;
-
-                singleTile.transform.localScale = childScale;
+                singleTile.transform.SetParent(gameObject.transform);
+                singleTile.transform.localScale = Vector3.one;
+                //singleTile.transform.rotation = Quaternion.AngleAxis(90, Vector3.back);
+                singleTile.GetComponent<Image>().sprite = sprite;
             }
         }
-
-        //transform.localScale = childScale;
+        
         this.initialized = true;
     }
 
@@ -112,14 +106,7 @@ public class UIMultiTile : MonoBehaviour
         }
 
     }
-
-    //public int framesToSkip = 10;
-    //public int currentFrame = 0;
-    //	public void Update ()
-    //	{
-    //		DoUpdate();
-    //	}
-
+    
     public void DoUpdate()
     {
         if (webcam == null || !webcam.isPlaying)
@@ -131,7 +118,6 @@ public class UIMultiTile : MonoBehaviour
         tileQuarter = webcam.GetPixels(webcam.width / 2, webcam.height / 2, quarterWidth, quarterHeight);
 
         AssembleTile_BaseBottomLeft_AllFlip();
-        //		screenTexture.SetPixels(0,0,tileWidth, tileHeight, tile);
         tileTexture.SetPixels(tile);
         tileTexture.Apply();
 
@@ -145,9 +131,11 @@ public class UIMultiTile : MonoBehaviour
     {
         forwardX = 0;
         backwardX = 0;
-        //for ( int jj = 0; jj < tile.Length; jj++){
-        //	tile[jj] = Color.blue;
-        //}
+        /*
+        for ( int jj = 0; jj < tile.Length; jj++) {
+            tile[jj] = new Color(0, 0, 1, 1); //Color.blue;
+        }
+        /*/
         for (int ii = 0; ii < quarterHeight; ii++)
         {
             forwardX = 0;
@@ -167,24 +155,7 @@ public class UIMultiTile : MonoBehaviour
                 }
             }
         }
+        //*/
     }
-
-    //Tile Texture
-    public void TileTexture()
-    {
-        for (int ii = 0; ii < widthSubdivisions; ii++)
-        {
-            for (int jj = 0; jj < heightSubdivisions; jj++)
-            {
-                for (int iiTile = 0; iiTile < tileWidth; iiTile++)
-                {
-                    for (int jjTile = 0; jjTile < tileHeight; jjTile++)
-                    {
-                        //         TileX index    Tile x      TileY index                        Tile y
-                        tiledColors[(ii * tileWidth) + iiTile + (jj * tileWidth * tileHeight * widthSubdivisions) + jjTile * (tileWidth * widthSubdivisions)] = tile[iiTile + (jjTile * tileWidth)];
-                    }
-                }
-            }
-        }
-    }
+    
 }

@@ -34,7 +34,7 @@ public class ImageLoader : MonoBehaviour
         var allFiles = di.GetFiles("*.png");
         files = allFiles.OrderByDescending(x => x.Name).ToList();
 
-        yield return LoadImagesBatch(currentBatch);
+        yield return LoadImagesBatch(currentBatch, BatchSize, files);
     }
 
     public void AddImageTo(int position, FileInfo info, Texture2D texture)
@@ -60,10 +60,10 @@ public class ImageLoader : MonoBehaviour
         var imageObject = CreateImage(textures.First(), name);
         imageObject.transform.SetAsFirstSibling();
     }
-    
-    public IEnumerator LoadImagesBatch(int batch)
+
+    private IEnumerator LoadImagesBatch(int currentBatch, int batchSize, List<FileInfo> files)
     {
-        for (var ii = 0; ii < files.Count; ii++)
+        for (var ii = currentBatch; ii < currentBatch + batchSize && ii < files.Count; ii++)
         {
             var file = files[ii];
             Debug.Log("LoadImage: "+file.FullName);

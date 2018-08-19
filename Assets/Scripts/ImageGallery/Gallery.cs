@@ -41,7 +41,7 @@ public class Gallery : MonoBehaviour
         undoButton.gameObject.SetActive(false);
     }
 
-    public void OnBackButtonClick()
+    public void Close()
     {
         gameObject.SetActive(false);
         //parentCanvas.sortingOrder = -1;

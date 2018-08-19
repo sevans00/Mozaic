@@ -3,7 +3,6 @@ using System.Collections;
 using System;
 using UnityEngine.UI;
 
-
 /*
 Credits:
 Me!  Shaun Evans
@@ -15,7 +14,8 @@ public class MultiTileController : MonoBehaviour
 
     public WebCamTexture webcam;
     public int webcamIndex = 0;
-    public MozaicMultiTile mozaicMultiTile;
+    //public MozaicMultiTile mozaicMultiTile;
+    public UIMultiTile uiMultiTile;
 
     public int widthSubdivisions = 6;
     public int heightSubdivisions = 6;
@@ -79,15 +79,22 @@ public class MultiTileController : MonoBehaviour
         webcam.Play();
         Debug.LogWarning("Webcam rotation: "+webcam.videoRotationAngle);
         //webcam.videoRotationAngle = 0f;
-        mozaicMultiTile.Initialize(webcam, widthSubdivisions, heightSubdivisions);
+        while (webcam.isPlaying == false)
+            yield return new WaitForEndOfFrame();
 
-        //TODO: Raw image?
-        rawImage.texture = webcam;
-        rawImage.canvasRenderer.SetAlpha(0.5f);
+        //TODO: Turn off loading screen
         
+        //mozaicMultiTile.Initialize(webcam, widthSubdivisions, heightSubdivisions);
+        uiMultiTile.Initialize(webcam, widthSubdivisions, heightSubdivisions);
+        
+        rawImage.texture = webcam;
+        //rawImage.transform.rotation = Quaternion.AngleAxis(webcam.videoRotationAngle, Vector3.back);
+
         yield return gallery.Initialize(Application.persistentDataPath + "/");
+        yield return new WaitForEndOfFrame();
 
         gallery.OnGalleryClosed += OnGalleryClosed;
+        Debug.Log("Initialized!");
         initialized = true;
     }
 
@@ -100,12 +107,24 @@ public class MultiTileController : MonoBehaviour
 
     public void Update()
     {
-        if (   mozaicMultiTile != null 
+        if ( uiMultiTile != null 
             && initialized 
-            && mozaicMultiTile.initialized 
+            && uiMultiTile.initialized 
             && !saving)
         {
-            mozaicMultiTile.DoUpdate();
+            //mozaicMultiTile.DoUpdate();
+            uiMultiTile.DoUpdate();
+        }
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            if (gallery.enabled)
+            {
+                gallery.Close();
+            }
+            if (optionsMenu.enabled)
+            {
+                optionsMenu.Close();
+            }
         }
     }
 
@@ -140,11 +159,11 @@ public class MultiTileController : MonoBehaviour
         PlayerPrefs.SetInt(PlayerPrefsKeys.START_CAMERA_INDEX, webcamIndex);
         webcam = new WebCamTexture(devices[webcamIndex].name);
         webcam.Play();
-        
-        mozaicMultiTile.Initialize(webcam, widthSubdivisions, heightSubdivisions);
+
+        //mozaicMultiTile.Initialize(webcam, widthSubdivisions, heightSubdivisions);
+        uiMultiTile.Initialize(webcam, widthSubdivisions, heightSubdivisions);
 
         rawImage.texture = webcam;
-        rawImage.canvasRenderer.SetAlpha(0.5f);
         initialized = true;
     }
 
@@ -158,7 +177,7 @@ public class MultiTileController : MonoBehaviour
         saving = true;
         
         //Assemble full tile:
-        var mozaicTexture = AssembleImage(mozaicMultiTile.tileTexture, widthSubdivisions, heightSubdivisions);
+        var mozaicTexture = AssembleImage(uiMultiTile.tileTexture, widthSubdivisions, heightSubdivisions);
         
         //ScreenshotManager.SaveImage(mozaicTexture, fileUID, "png");
         StartCoroutine(SavePicture(mozaicTexture));
@@ -245,6 +264,12 @@ public class MultiTileController : MonoBehaviour
     public void Click_SwitchResolution()
     {
         throw new NotImplementedException();
+    }
+
+    public void Click_About()
+    {
+        //Display About
+
     }
 
     public void Click_Exit()
